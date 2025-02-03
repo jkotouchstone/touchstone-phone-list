@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Employee - Touchstone Phone List</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="container mt-5">
+  <h2>Edit Employee</h2>
+  <form method="POST">
+    <div class="form-group">
+      <label>Name</label>
+      <input type="text" name="name" class="form-control" value="{{ employee['name'] }}" required>
+    </div>
+    <div class="form-group">
+      <label>Extension</label>
+      <input type="text" name="extension" class="form-control" value="{{ employee['extension'] }}">
+    </div>
+    <div class="form-group">
+      <label>Cell Phone</label>
+      <input type="text" name="cell_phone" class="form-control" value="{{ employee['cell_phone'] }}">
+    </div>
+    <div class="form-group">
+      <label>Job Title</label>
+      <input type="text" name="job_title" class="form-control" value="{{ employee['job_title'] }}">
+    </div>
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+    <a href="{{ url_for('admin_panel') }}" class="btn btn-secondary">Cancel</a>
+  </form>
+</body>
+</html>
