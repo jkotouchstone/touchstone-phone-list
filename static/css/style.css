@@ -1,0 +1,60 @@
+/* static/css/style.css */
+
+/* Global Styles */
+body {
+  background-color: #ffffff; /* White background */
+  color: #3a3734; /* Primary text color */
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  color: #3765ad; /* Primary accent for headings */
+}
+
+/* Navbar or Header (if you add one) */
+.navbar, .header {
+  background-color: #3765ad;
+  color: #ffffff;
+  padding: 15px;
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: #3765ad;
+  border-color: #3765ad;
+  color: #ffffff;
+}
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: #3a3734;
+  border-color: #3a3734;
+  color: #ffffff;
+}
+
+/* Tables */
+.table {
+  border: 1px solid #3a3734;
+}
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: #f5f5f5;
+}
+.table-striped tbody tr:nth-of-type(even) {
+  background-color: #ffffff;
+}
+
+/* Forms */
+.form-control {
+  border: 1px solid #3a3734;
+}
+.form-control:focus {
+  border-color: #3765ad;
+  box-shadow: 0 0 5px rgba(55, 101, 173, 0.5);
+}
+
+/* Alerts */
+.alert {
+  border-left: 5px solid #3765ad;
+}
