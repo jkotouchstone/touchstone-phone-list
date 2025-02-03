@@ -24,12 +24,13 @@ def init_db():
             job_title TEXT
         )
     ''')
-    # Create offices table if it doesn't exist
+    # Create offices table if it doesn't exist (with physical_address)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS offices (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             office_name TEXT NOT NULL,
-            direct_line TEXT
+            direct_line TEXT,
+            physical_address TEXT
         )
     ''')
     conn.commit()
@@ -81,7 +82,7 @@ def admin_login():
             flash('Invalid admin password')
     return render_template('admin_login.html')
 
-# Admin panel to add/remove data
+# Admin panel to add/remove/edit data
 @app.route('/admin')
 def admin_panel():
     if not session.get('authenticated'):
@@ -123,7 +124,7 @@ def delete_employee(employee_id):
     conn.close()
     return redirect(url_for('admin_panel'))
 
-# Route to add an office location
+# Route to add an office location (with physical address)
 @app.route('/admin/add_office', methods=['POST'])
 def add_office():
     if not session.get('admin'):
@@ -131,9 +132,10 @@ def add_office():
         return redirect(url_for('admin_login'))
     office_name = request.form.get('office_name')
     direct_line = request.form.get('direct_line')
+    physical_address = request.form.get('physical_address')  # new field
     conn = get_db_connection()
-    conn.execute('INSERT INTO offices (office_name, direct_line) VALUES (?, ?)',
-                 (office_name, direct_line))
+    conn.execute('INSERT INTO offices (office_name, direct_line, physical_address) VALUES (?, ?, ?)',
+                 (office_name, direct_line, physical_address))
     conn.commit()
     conn.close()
     return redirect(url_for('admin_panel'))
@@ -149,6 +151,49 @@ def delete_office(office_id):
     conn.commit()
     conn.close()
     return redirect(url_for('admin_panel'))
+
+# --- New Endpoints for Editing Records ---
+
+# Edit Employee
+@app.route('/admin/edit_employee/<int:employee_id>', methods=['GET', 'POST'])
+def edit_employee(employee_id):
+    if not session.get('admin'):
+        flash('Admin access required')
+        return redirect(url_for('admin_login'))
+    conn = get_db_connection()
+    employee = conn.execute('SELECT * FROM employees WHERE id = ?', (employee_id,)).fetchone()
+    if request.method == 'POST':
+         name = request.form.get('name')
+         extension = request.form.get('extension')
+         cell_phone = request.form.get('cell_phone')
+         job_title = request.form.get('job_title')
+         conn.execute('UPDATE employees SET name=?, extension=?, cell_phone=?, job_title=? WHERE id=?',
+                      (name, extension, cell_phone, job_title, employee_id))
+         conn.commit()
+         conn.close()
+         return redirect(url_for('admin_panel'))
+    conn.close()
+    return render_template('edit_employee.html', employee=employee)
+
+# Edit Office
+@app.route('/admin/edit_office/<int:office_id>', methods=['GET', 'POST'])
+def edit_office(office_id):
+    if not session.get('admin'):
+        flash('Admin access required')
+        return redirect(url_for('admin_login'))
+    conn = get_db_connection()
+    office = conn.execute('SELECT * FROM offices WHERE id = ?', (office_id,)).fetchone()
+    if request.method == 'POST':
+         office_name = request.form.get('office_name')
+         direct_line = request.form.get('direct_line')
+         physical_address = request.form.get('physical_address')
+         conn.execute('UPDATE offices SET office_name=?, direct_line=?, physical_address=? WHERE id=?',
+                      (office_name, direct_line, physical_address, office_id))
+         conn.commit()
+         conn.close()
+         return redirect(url_for('admin_panel'))
+    conn.close()
+    return render_template('edit_office.html', office=office)
 
 if __name__ == '__main__':
     app.run(debug=True)
