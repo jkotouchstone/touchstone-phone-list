@@ -26,6 +26,9 @@
     <div class="form-group">
       <input type="text" name="job_title" placeholder="Job Title" class="form-control">
     </div>
+    <div class="form-group">
+      <input type="text" name="location" placeholder="Location" class="form-control">
+    </div>
     <button type="submit" class="btn btn-success">Add Employee</button>
   </form>
   
@@ -40,6 +43,7 @@
         <th>Extension</th>
         <th>Cell Phone</th>
         <th>Job Title</th>
+        <th>Location</th>
         <th>Action</th>
       </tr>
     </thead>
@@ -50,6 +54,7 @@
         <td>{{ emp['extension'] }}</td>
         <td>{{ emp['cell_phone'] }}</td>
         <td>{{ emp['job_title'] }}</td>
+        <td>{{ emp['location'] }}</td>
         <td>
           <a href="{{ url_for('edit_employee', employee_id=emp['id']) }}" class="btn btn-warning btn-sm">Edit</a>
           <form method="POST" action="{{ url_for('delete_employee', employee_id=emp['id']) }}" style="display:inline;">
