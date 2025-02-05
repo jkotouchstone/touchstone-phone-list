@@ -1,202 +1,46 @@
-import sqlite3
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for
+from flask_sqlalchemy import SQLAlchemy
+import os
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key'  # Replace with a strong secret in production
 
-DATABASE = 'phone_list.db'
+# Use your Render PostgreSQL database URL
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://phone_list_user:Im2SEXmPwj7aFeuvv5gCjGwTBM1c8jJ3@dpg-cuhj5el2ng1s7387h7p0-a/phone_list"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-def get_db_connection():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    return conn
+db = SQLAlchemy(app)
 
-def init_db():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    # Create employees table (for new databases) with the new 'location' column
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS employees (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            extension TEXT,
-            cell_phone TEXT,
-            job_title TEXT,
-            location TEXT
-        )
-    ''')
-    # Create offices table (unchanged)
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS offices (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            office_name TEXT NOT NULL,
-            direct_line TEXT,
-            physical_address TEXT
-        )
-    ''')
-    conn.commit()
-    conn.close()
+# Define Employee Model
+class Employee(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    extension = db.Column(db.String(10), nullable=False)
+    cell_phone = db.Column(db.String(20), nullable=False)
+    job_title = db.Column(db.String(100), nullable=False)
+    location = db.Column(db.String(100), nullable=False)
 
-def migrate_employee_table():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    # Check the current columns in the employees table
-    cursor.execute("PRAGMA table_info(employees)")
-    columns = [col[1] for col in cursor.fetchall()]
-    if "location" not in columns:
-        # Add the new 'location' column without affecting existing data
-        cursor.execute("ALTER TABLE employees ADD COLUMN location TEXT")
-        conn.commit()
-    conn.close()
+# Create Tables
+with app.app_context():
+    db.create_all()  # Ensures tables exist
 
-# Initialize the database and run migration
-init_db()
-migrate_employee_table()
-
-@app.route('/')
+@app.route("/")
 def index():
-    if not session.get('authenticated'):
-        return redirect(url_for('login'))
-    conn = get_db_connection()
-    employees = conn.execute('SELECT * FROM employees').fetchall()
-    offices = conn.execute('SELECT * FROM offices').fetchall()
-    conn.close()
-    return render_template('index.html', employees=employees, offices=offices)
+    employees = Employee.query.all()  # Fetch all employees
+    return render_template("index.html", employees=employees)
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        password = request.form.get('password')
-        if password == 'Touchstone':
-            session['authenticated'] = True
-            return redirect(url_for('index'))
-        else:
-            flash('Invalid password')
-    return render_template('login.html')
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    return redirect(url_for('login'))
-
-@app.route('/admin/login', methods=['GET', 'POST'])
-def admin_login():
-    if not session.get('authenticated'):
-        return redirect(url_for('login'))
-    if request.method == 'POST':
-        admin_password = request.form.get('admin_password')
-        if admin_password == 'Chatham':
-            session['admin'] = True
-            return redirect(url_for('admin_panel'))
-        else:
-            flash('Invalid admin password')
-    return render_template('admin_login.html')
-
-@app.route('/admin')
-def admin_panel():
-    if not session.get('authenticated'):
-        return redirect(url_for('login'))
-    if not session.get('admin'):
-        return redirect(url_for('admin_login'))
-    conn = get_db_connection()
-    employees = conn.execute('SELECT * FROM employees').fetchall()
-    offices = conn.execute('SELECT * FROM offices').fetchall()
-    conn.close()
-    return render_template('admin.html', employees=employees, offices=offices)
-
-@app.route('/admin/add_employee', methods=['POST'])
+@app.route("/add_employee", methods=["POST"])
 def add_employee():
-    if not session.get('admin'):
-        flash('Admin access required')
-        return redirect(url_for('admin_login'))
-    name = request.form.get('name')
-    extension = request.form.get('extension')
-    cell_phone = request.form.get('cell_phone')
-    job_title = request.form.get('job_title')
-    location = request.form.get('location')  # New field
-    conn = get_db_connection()
-    conn.execute('INSERT INTO employees (name, extension, cell_phone, job_title, location) VALUES (?, ?, ?, ?, ?)',
-                 (name, extension, cell_phone, job_title, location))
-    conn.commit()
-    conn.close()
-    return redirect(url_for('admin_panel'))
+    name = request.form["name"]
+    extension = request.form["extension"]
+    cell_phone = request.form["cell_phone"]
+    job_title = request.form["job_title"]
+    location = request.form["location"]
 
-@app.route('/admin/delete_employee/<int:employee_id>', methods=['POST'])
-def delete_employee(employee_id):
-    if not session.get('admin'):
-        flash('Admin access required')
-        return redirect(url_for('admin_login'))
-    conn = get_db_connection()
-    conn.execute('DELETE FROM employees WHERE id = ?', (employee_id,))
-    conn.commit()
-    conn.close()
-    return redirect(url_for('admin_panel'))
+    new_employee = Employee(name=name, extension=extension, cell_phone=cell_phone, job_title=job_title, location=location)
+    db.session.add(new_employee)
+    db.session.commit()
 
-@app.route('/admin/add_office', methods=['POST'])
-def add_office():
-    if not session.get('admin'):
-        flash('Admin access required')
-        return redirect(url_for('admin_login'))
-    office_name = request.form.get('office_name')
-    direct_line = request.form.get('direct_line')
-    physical_address = request.form.get('physical_address')
-    conn = get_db_connection()
-    conn.execute('INSERT INTO offices (office_name, direct_line, physical_address) VALUES (?, ?, ?)',
-                 (office_name, direct_line, physical_address))
-    conn.commit()
-    conn.close()
-    return redirect(url_for('admin_panel'))
+    return redirect(url_for("index"))
 
-@app.route('/admin/delete_office/<int:office_id>', methods=['POST'])
-def delete_office(office_id):
-    if not session.get('admin'):
-        flash('Admin access required')
-        return redirect(url_for('admin_login'))
-    conn = get_db_connection()
-    conn.execute('DELETE FROM offices WHERE id = ?', (office_id,))
-    conn.commit()
-    conn.close()
-    return redirect(url_for('admin_panel'))
-
-@app.route('/admin/edit_employee/<int:employee_id>', methods=['GET', 'POST'])
-def edit_employee(employee_id):
-    if not session.get('admin'):
-        flash('Admin access required')
-        return redirect(url_for('admin_login'))
-    conn = get_db_connection()
-    employee = conn.execute('SELECT * FROM employees WHERE id = ?', (employee_id,)).fetchone()
-    if request.method == 'POST':
-         name = request.form.get('name')
-         extension = request.form.get('extension')
-         cell_phone = request.form.get('cell_phone')
-         job_title = request.form.get('job_title')
-         location = request.form.get('location')  # New field
-         conn.execute('UPDATE employees SET name=?, extension=?, cell_phone=?, job_title=?, location=? WHERE id=?',
-                      (name, extension, cell_phone, job_title, location, employee_id))
-         conn.commit()
-         conn.close()
-         return redirect(url_for('admin_panel'))
-    conn.close()
-    return render_template('edit_employee.html', employee=employee)
-
-@app.route('/admin/edit_office/<int:office_id>', methods=['GET', 'POST'])
-def edit_office(office_id):
-    if not session.get('admin'):
-        flash('Admin access required')
-        return redirect(url_for('admin_login'))
-    conn = get_db_connection()
-    office = conn.execute('SELECT * FROM offices WHERE id = ?', (office_id,)).fetchone()
-    if request.method == 'POST':
-         office_name = request.form.get('office_name')
-         direct_line = request.form.get('direct_line')
-         physical_address = request.form.get('physical_address')
-         conn.execute('UPDATE offices SET office_name=?, direct_line=?, physical_address=? WHERE id=?',
-                      (office_name, direct_line, physical_address, office_id))
-         conn.commit()
-         conn.close()
-         return redirect(url_for('admin_panel'))
-    conn.close()
-    return render_template('edit_office.html', office=office)
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
