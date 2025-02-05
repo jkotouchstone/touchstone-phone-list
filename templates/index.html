@@ -1,6 +1,16 @@
-{% extends "base.html" %}
-{% block title %}Touchstone Phone List{% endblock %}
-{% block content %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Touchstone Phone List</title>
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <!-- DataTables CSS -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="container mt-5">
   <h2>Employee Phone List</h2>
   <table id="employeeTable" class="table table-striped">
     <thead>
@@ -44,16 +54,36 @@
       {% endfor %}
     </tbody>
   </table>
+  
   <div class="mt-3">
+    <!-- Navigation Buttons -->
     <a href="{{ url_for('admin_panel') }}" class="btn btn-primary">Admin Panel</a>
-    <a href="{{ url_for('upload') }}" class="btn btn-info">Upload Data</a>
+    <a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a>
+    <a href="https://www.touchstonehub.com" class="btn btn-info">Touchstone Hub</a>
   </div>
-{% endblock %}
-{% block extra_scripts %}
-<script>
-  $(document).ready(function () {
-    $('#employeeTable').DataTable();
-    $('#officeTable').DataTable();
-  });
-</script>
-{% endblock %}
+  
+  <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+  <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.js"></script>
+  <script>
+    $(document).ready(function() {
+      // Configure the Employee table
+      $('#employeeTable').DataTable({
+          paging: false,    // Show all entries
+          info: false,      // Hide info (e.g., "Showing X to Y of Z entries")
+          searching: true,  // Enable the search bar
+          ordering: true,   // Enable column ordering
+          // Move the search bar to the top right:
+          dom: "<'row'<'col-sm-12 text-right'f>>" + "rt"
+      });
+      // Configure the Office table with the same settings:
+      $('#officeTable').DataTable({
+          paging: false,
+          info: false,
+          searching: true,
+          ordering: true,
+          dom: "<'row'<'col-sm-12 text-right'f>>" + "rt"
+      });
+    });
+  </script>
+</body>
+</html>
