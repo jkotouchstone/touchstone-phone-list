@@ -1,11 +1,14 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 import os
+import csv
+import io
 
 app = Flask(__name__)
+app.secret_key = "some_secret_key"  # Needed for flashing messages
 
 # Load database URL from Render environment variable
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")  # Now using an environment variable
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
@@ -48,6 +51,48 @@ def add_employee():
     db.session.commit()
 
     return redirect(url_for("index"))
+
+@app.route("/upload", methods=["GET", "POST"])
+def upload():
+    if request.method == "POST":
+        # Check if a file was uploaded
+        if "file" not in request.files or request.files["file"].filename == "":
+            flash("No file selected!")
+            return redirect(request.url)
+        
+        file = request.files["file"]
+
+        try:
+            # Read and decode the file (assuming it's a CSV encoded in UTF-8)
+            stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
+            csv_input = csv.reader(stream)
+            
+            # Optionally, skip the header row if your CSV has headers:
+            headers = next(csv_input, None)
+            
+            # Iterate over the CSV rows and add each record to the database
+            for row in csv_input:
+                # Adjust these indices based on your CSV column order:
+                # For example: name, extension, cell_phone, job_title, location
+                if len(row) < 5:
+                    continue  # Skip incomplete rows
+                employee = Employee(
+                    name=row[0].strip(),
+                    extension=row[1].strip(),
+                    cell_phone=row[2].strip(),
+                    job_title=row[3].strip(),
+                    location=row[4].strip()
+                )
+                db.session.add(employee)
+            db.session.commit()
+            flash("File uploaded and data imported successfully!")
+        except Exception as e:
+            flash(f"An error occurred: {str(e)}")
+        
+        return redirect(url_for("index"))
+    
+    # If GET, render the upload form
+    return render_template("upload.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
