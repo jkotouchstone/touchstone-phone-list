@@ -56,11 +56,9 @@
   </table>
   
   <div class="mt-3">
-    <!-- Removed logout link to avoid BuildError -->
-    <!-- <a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a> -->
+    <!-- Removed the logout link entirely to avoid the BuildError -->
     <a href="{{ url_for('admin_panel') }}" class="btn btn-primary">Admin Panel</a>
-    <!-- You could also add other links as needed, for example: -->
-    <!-- <a href="{{ url_for('upload') }}" class="btn btn-info">Upload Data</a> -->
+    <a href="{{ url_for('upload') }}" class="btn btn-info">Upload Data</a>
   </div>
   
   <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
