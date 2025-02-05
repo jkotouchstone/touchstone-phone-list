@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel - Touchstone Phone List{% endblock %}
+{% block content %}
+  <h2>Admin Panel</h2>
+  
+  <!-- Employee Section -->
+  <h3>Add / Edit Employee</h3>
+  <!-- 
+       If you need inline editing, you can either show/hide a form with JavaScript or load 
+       data into the form when an "Edit" button is clicked. For simplicity, here’s a combined form.
+  -->
+  <form method="POST" action="{{ url_for('save_employee') }}">
+    <input type="hidden" name="employee_id" value="{{ employee_to_edit.id if employee_to_edit }}">
+    <div class="form-group">
+      <input type="text" name="name" placeholder="Name" class="form-control" value="{{ employee_to_edit.name if employee_to_edit }}" required>
+    </div>
+    <div class="form-group">
+      <input type="text" name="extension" placeholder="Extension" class="form-control" value="{{ employee_to_edit.extension if employee_to_edit }}">
+    </div>
+    <div class="form-group">
+      <input type="text" name="cell_phone" placeholder="Cell Phone" class="form-control" value="{{ employee_to_edit.cell_phone if employee_to_edit }}">
+    </div>
+    <div class="form-group">
+      <input type="text" name="job_title" placeholder="Job Title" class="form-control" value="{{ employee_to_edit.job_title if employee_to_edit }}">
+    </div>
+    <div class="form-group">
+      <input type="text" name="location" placeholder="Location" class="form-control" value="{{ employee_to_edit.location if employee_to_edit }}">
+    </div>
+    <button type="submit" class="btn btn-success">{{ 'Update' if employee_to_edit else 'Add' }} Employee</button>
+  </form>
+  
+  <h3>Employee List</h3>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Extension</th>
+        <th>Cell Phone</th>
+        <th>Job Title</th>
+        <th>Location</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for emp in employees %}
+      <tr>
+        <td>{{ emp.name }}</td>
+        <td>{{ emp.extension }}</td>
+        <td>{{ emp.cell_phone }}</td>
+        <td>{{ emp.job_title }}</td>
+        <td>{{ emp.location }}</td>
+        <td>
+          <a href="{{ url_for('admin_panel', edit_employee_id=emp.id) }}" class="btn btn-warning btn-sm">Edit</a>
+          <form method="POST" action="{{ url_for('delete_employee', employee_id=emp.id) }}" style="display:inline;">
+            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete this employee?');">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  
+  <hr>
+  
+  <!-- Office Section -->
+  <h3>Add / Edit Office</h3>
+  <form method="POST" action="{{ url_for('save_office') }}">
+    <input type="hidden" name="office_id" value="{{ office_to_edit.id if office_to_edit }}">
+    <div class="form-group">
+      <input type="text" name="office_name" placeholder="Office Name" class="form-control" value="{{ office_to_edit.office_name if office_to_edit }}" required>
+    </div>
+    <div class="form-group">
+      <input type="text" name="direct_line" placeholder="Direct Line" class="form-control" value="{{ office_to_edit.direct_line if office_to_edit }}">
+    </div>
+    <div class="form-group">
+      <input type="text" name="physical_address" placeholder="Physical Address" class="form-control" value="{{ office_to_edit.physical_address if office_to_edit }}">
+    </div>
+    <button type="submit" class="btn btn-success">{{ 'Update' if office_to_edit else 'Add' }} Office</button>
+  </form>
+  
+  <h3>Office List</h3>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Office Name</th>
+        <th>Direct Line</th>
+        <th>Physical Address</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for office in offices %}
+      <tr>
+        <td>{{ office.office_name }}</td>
+        <td>{{ office.direct_line }}</td>
+        <td>{{ office.physical_address }}</td>
+        <td>
+          <a href="{{ url_for('admin_panel', edit_office_id=office.id) }}" class="btn btn-warning btn-sm">Edit</a>
+          <form method="POST" action="{{ url_for('delete_office', office_id=office.id) }}" style="display:inline;">
+            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete this office?');">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  
+  <div class="mt-3">
+    <a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a>
+    <a href="{{ url_for('index') }}" class="btn btn-primary">Back to View</a>
+  </div>
+{% endblock %}
