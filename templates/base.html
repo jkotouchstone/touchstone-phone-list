@@ -3,15 +3,101 @@
 <head>
   <meta charset="UTF-8">
   <title>{% block title %}Touchstone Phone List{% endblock %}</title>
+  <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <!-- Custom CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    /* Extra bottom padding */
+    body {
+      padding-bottom: 50px;
+    }
+  </style>
   {% block extra_head %}{% endblock %}
 </head>
 <body class="container mt-5">
-  {% block content %}{% endblock %}
+  {% block content %}
+  <!-- Example content block: replace or extend as needed -->
   
+  <!-- Example: A table for employees -->
+  <h2>Employee Phone List</h2>
+  <table id="employeeTable" class="table table-striped">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Extension</th>
+        <th>Cell Phone</th>
+        <th>Job Title</th>
+        <th>Location</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for emp in employees %}
+      <tr>
+        <td>{{ emp.name }}</td>
+        <td>{{ emp.extension }}</td>
+        <td>{{ emp.cell_phone }}</td>
+        <td>{{ emp.job_title }}</td>
+        <td>{{ emp.location }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  
+  <!-- Example: A table for office locations -->
+  <h2>Office Locations</h2>
+  <table id="officeTable" class="table table-striped">
+    <thead>
+      <tr>
+        <th>Office Name</th>
+        <th>Direct Line</th>
+        <th>Physical Address</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for office in offices %}
+      <tr>
+        <td>{{ office.office_name }}</td>
+        <td>{{ office.direct_line }}</td>
+        <td>{{ office.physical_address }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  
+  <!-- Navigation or action buttons -->
+  <div class="mt-3">
+    <a href="{{ url_for('admin_panel') }}" class="btn btn-primary">Admin Panel</a>
+    <a href="{{ url_for('upload') }}" class="btn btn-info">Upload Data</a>
+  </div>
+  
+  {% endblock %}
+  
+  <!-- jQuery and DataTables scripts -->
   <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
   <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.js"></script>
-  {% block extra_scripts %}{% endblock %}
+  {% block extra_scripts %}
+  <script>
+    $(document).ready(function() {
+      // Initialize DataTable for employees:
+      $('#employeeTable').DataTable({
+        paging: false,    // Disable pagination to show all entries
+        info: false,      // Disable the "Showing X to Y of Z entries" info
+        searching: true,  // Enable search/filter input
+        ordering: true,   // Allow column ordering
+        // Custom DOM layout: Place the search bar at the top right.
+        dom: "<'row'<'col-sm-12 text-right'f>>" + "rt"
+      });
+      // Initialize DataTable for offices with the same configuration:
+      $('#officeTable').DataTable({
+        paging: false,
+        info: false,
+        searching: true,
+        ordering: true,
+        dom: "<'row'<'col-sm-12 text-right'f>>" + "rt"
+      });
+    });
+  </script>
+  {% endblock %}
 </body>
 </html>
