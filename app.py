@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
+from functools import wraps
 import os
 import csv
 import io
@@ -14,9 +15,19 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
 # --------------------------
+# Login Required Decorator
+# --------------------------
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+         if not session.get('authenticated'):
+              return redirect(url_for('login'))
+         return f(*args, **kwargs)
+    return decorated_function
+
+# --------------------------
 # Database Models
 # --------------------------
-
 class Employee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -35,16 +46,35 @@ with app.app_context():
     db.create_all()
 
 # --------------------------
-# Public Routes
+# Authentication Routes
 # --------------------------
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == "POST":
+         if request.form.get("password") == "3827":
+              session['authenticated'] = True
+              return redirect(url_for('index'))
+         else:
+              flash("Incorrect password. Please try again.")
+    return render_template("login.html")
 
+@app.route("/logout")
+def logout():
+    session.pop('authenticated', None)
+    return redirect(url_for("login"))
+
+# --------------------------
+# Public Routes (Protected)
+# --------------------------
 @app.route("/")
+@login_required
 def index():
     employees = Employee.query.all()
     offices = Office.query.all()
     return render_template("index.html", employees=employees, offices=offices)
 
 @app.route("/upload", methods=["GET", "POST"])
+@login_required
 def upload():
     if request.method == "POST":
         if "file" not in request.files or request.files["file"].filename == "":
@@ -80,10 +110,10 @@ def upload():
     return render_template("upload.html")
 
 # --------------------------
-# Admin Panel and Management Routes
+# Admin Panel and Management Routes (Protected)
 # --------------------------
-
 @app.route("/admin_panel")
+@login_required
 def admin_panel():
     # Query all employees and offices to display in the admin panel.
     employees = Employee.query.all()
@@ -106,6 +136,7 @@ def admin_panel():
                            office_to_edit=office_to_edit)
 
 @app.route("/save_employee", methods=["POST"])
+@login_required
 def save_employee():
     # This route handles both adding a new employee and updating an existing one.
     employee_id = request.form.get("employee_id")
@@ -135,6 +166,7 @@ def save_employee():
     return redirect(url_for("admin_panel"))
 
 @app.route("/delete_employee/<int:employee_id>", methods=["POST"])
+@login_required
 def delete_employee(employee_id):
     employee = Employee.query.get_or_404(employee_id)
     db.session.delete(employee)
@@ -142,6 +174,7 @@ def delete_employee(employee_id):
     return redirect(url_for("admin_panel"))
 
 @app.route("/save_office", methods=["POST"])
+@login_required
 def save_office():
     # This route handles both adding a new office and updating an existing one.
     office_id = request.form.get("office_id")
@@ -163,25 +196,19 @@ def save_office():
     return redirect(url_for("admin_panel"))
 
 @app.route("/delete_office/<int:office_id>", methods=["POST"])
+@login_required
 def delete_office(office_id):
     office = Office.query.get_or_404(office_id)
     db.session.delete(office)
     db.session.commit()
     return redirect(url_for("admin_panel"))
 
-@app.route("/logout")
-def logout():
-    # Simple logout: clear session if you're using one, then redirect.
-    # For now, just redirect to the public index.
-    return redirect(url_for("index"))
-
 # --------------------------
-# (Optional) Public Add Employee Route
+# (Optional) Public Add Employee Route (Protected)
 # --------------------------
-# You may or may not need this if all adding/editing is done through the admin panel.
 @app.route("/add_employee", methods=["POST"])
+@login_required
 def public_add_employee():
-    # This duplicate route can be renamed or removed if unnecessary.
     name = request.form["name"]
     extension = request.form["extension"]
     cell_phone = request.form["cell_phone"]
