@@ -11,6 +11,7 @@ app.secret_key = "some_secret_key"  # Replace with your own secret key
 @app.after_request
 def add_headers(response):
     response.headers['Content-Security-Policy'] = "frame-ancestors 'self' https://sites.google.com"
+    response.headers.pop('X-Frame-Options', None)  # <- This removes the blocking header
     return response
 
 # Load the database URL from the environment variable (set in Render)
