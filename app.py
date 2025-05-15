@@ -8,6 +8,11 @@ import io
 app = Flask(__name__)
 app.secret_key = "some_secret_key"  # Replace with your own secret key
 
+@app.after_request
+def add_headers(response):
+    response.headers['Content-Security-Policy'] = "frame-ancestors 'self' https://sites.google.com"
+    return response
+
 # Load the database URL from the environment variable (set in Render)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
